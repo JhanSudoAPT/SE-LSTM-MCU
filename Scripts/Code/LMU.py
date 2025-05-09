@@ -23,7 +23,7 @@ HP = {
     'theta_lmu2': 6,  # Theta for LMU2 (seq_length//4)
     'dense_units': [48, 24],  # Units in dense layers
     'batch_size': 64,
-    'epochs': 8,
+    'epochs': 80, 
     'learning_rate': 0.0007,
     'weight_decay': 0.001,
     'l2_reg': 0.01  # L2 regularization
