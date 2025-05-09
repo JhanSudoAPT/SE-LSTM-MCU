@@ -211,7 +211,7 @@ def build_model():
 model = build_model()
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.85, patience=10, min_delta=0.001, min_lr=1e-6, verbose=1)
-history = model.fit([X_cont_train, X_season_train], y_train, epochs=5, batch_size=64,
+history = model.fit([X_cont_train, X_season_train], y_train, epochs=90, batch_size=64,
                    validation_data=([X_cont_val, X_season_val], y_val), callbacks=[reduce_lr])
 
 plot_training_history(history, val_plots_path)
