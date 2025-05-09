@@ -194,12 +194,16 @@ def main():
     model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     model.summary()
 
+    # Patience
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=1)
+
     # Train
     history = model.fit(
         X_train, y_train,
         validation_data=(X_val, y_val),
-        epochs=5,
-        batch_size=32
+        epochs=5,    ##This model takes a little longer to converge than the other model, a around 80-120; overfitting is visble after more than 150 epochs. 
+        batch_size=32,
+        callbacks=[early_stopping]
     )
 
     # Loss plots
