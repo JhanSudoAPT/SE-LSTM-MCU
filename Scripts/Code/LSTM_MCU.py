@@ -169,12 +169,16 @@ def main():
     model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     model.summary()
 
+    # Patience
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=1)
+
     history = model.fit(
         X_cont_train,
         y_train,
         validation_data=(X_cont_val, y_val),
-        epochs=5,
-        batch_size=32
+        epochs=5, ##This model convergues around 40-80 epochs.
+        batch_size=32,
+        callbacks=[early_stopping]
     )
 
     # Loss plots
