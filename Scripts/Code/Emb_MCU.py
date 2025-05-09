@@ -7,7 +7,8 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import os
-
+##In this code, we obtain or extract the learned vectors using the embedding technique.
+##It is configured with the same implementation architecture used in MCUs.
 # ===================== PORTABLE CONFIGURATION =====================
 # Base directory (where this script is located)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -261,7 +262,7 @@ def main():
         [X_cont_train, X_season_train],
         y_train,
         validation_data=([X_cont_val, X_season_val], y_val),
-        epochs=5,
+        epochs=90,
         batch_size=32
     )
 
