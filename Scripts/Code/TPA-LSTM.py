@@ -16,7 +16,7 @@ PREDICTIONS = [1, 3, 6]
 EMBED_DIM = 64
 
 # Training parameters
-EPOCHS = 5
+EPOCHS = 120    ##This model takes longer to converge compared to the other models 
 BATCH_SIZE = 256
 LR_INITIAL = 0.0001
 REDUCE_LR_FACTOR = 0.85
