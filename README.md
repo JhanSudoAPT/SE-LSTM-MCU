@@ -45,93 +45,31 @@ How the data was cleaned and prepared for model training
 Directory Structure
 
 Git/
-  Data/               # Raw and processed data
+  Data/
     Raw/
-      Dataset2020-2025.csv
     Processed/
-      train.csv
-      val.csv
-      test.csv
 
-  Figures/            # Graphs and visualizations
-    Embeddings_PCA_2D.png
-    Embeddings_PCA_3D.png
-    ESP32.png
-    Flowchart.png
-    algorithm_flowchart.png
+  Figures/
 
-  Models/             # Trained models
+  Models/
     ModelsComparison/
-      best_model_LMU.keras
-      best_model_LSTM.keras
-      best_model_SE_LSTM.keras
-      best_model_TPA_LSTM.keras
     ModelsOnMCUs/
-      best_model_LSTM_MCU.keras
-      best_model_SE_LSTM.tflite
-      best_model_SE_LSTM_ON_MCU.keras
-      explanatory_text.txt
 
-  Results/            # Test results and metrics
+  Results/
     Comparison I/
       MetricsTXT/
-        metrics_LMU.txt
-        metrics_LSTM.txt
-        metrics_SE_LSTM.txt
-        metrics_TPA_LSTM.txt
       Plots/
-        comparison_test_LMU.png
-        comparison_test_LSTM.png
-        comparison_test_SE_LSTM.png
-        comparison_test_TPA_LSTM.png
     Comparison II/
       Metrics/
-        metrics_LSTM.txt
-        metrics_SE_LSTM.txt
       Plots/
-        comparison_test_LSTM.png
-        comparison_test_SE_LSTM.png
 
-  Scripts/            # Source code
+  Scripts/
     Code/
-      LMU.py
-      LSTM.py
-      LSTM_MCU.py
-      SE-LSTM.py
-      SE-LSTM_MCU.py
-      TPA-LSTM.py
-      Emb_MCU.py
-      requirements.txt
-      library.txt
       data/
-        train.csv
-        val.csv
-        test.csv
-
     Implementation/
-      ei-prueba-arduino-1.0.1.zip
-      explanatory_text.txt
-      RapidTest.ino
-
     ProcessData/
-      ProcessData.py
-      requirements.txt
-      library.txt
       Data/
-        Dataset2020-2025.csv
-        train.csv
-        val.csv
-        test.csv
       DataNormalized/
-        Dataset2020-2025_Cleaned.csv
-        Dataset2020-2025_Normalized.csv
       AnalisisData/
-        Boxplot_RH2M.png
-        Boxplot_T2M.png
-        Histogram_RH2M.png
-        Histogram_T2M.png
-        OutliersDetected.csv
       PLOTS/
-        normalized_distributions.png
-        TimeSeries_RH2M.png
-        TimeSeries_T2M.png
+
