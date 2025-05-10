@@ -41,7 +41,6 @@ The raw data
 How the data was cleaned and prepared for model training
 
 -------------------------------------------------------------------------------------------
-
 Directory Structure
 
 Git/
