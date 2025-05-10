@@ -44,31 +44,49 @@ How the data was cleaned and prepared for model training
 Directory Structure
 
 Git/
-  Data/
-    Raw/
-    Processed/
+ Data/
 
-  Figures/
+Raw/
 
-  Models/
-    ModelsComparison/
-    ModelsOnMCUs/
+Processed/
 
-  Results/
-    Comparison I/
-      MetricsTXT/
-      Plots/
-    Comparison II/
-      Metrics/
-      Plots/
+Figures/
 
-  Scripts/
-    Code/
-      data/
-    Implementation/
-    ProcessData/
-      Data/
-      DataNormalized/
-      AnalisisData/
-      PLOTS/
+Models/
+
+ModelsComparison/
+
+ModelsOnMCUs/
+
+Results/
+
+Comparison I/
+
+MetricsTXT/
+
+Plots/
+
+Comparison II/
+
+Metrics/
+
+Plots/
+
+Scripts/
+
+Code/
+
+data/
+
+Implementation/
+
+ProcessData/
+
+Data/
+
+DataNormalized/
+
+AnalisisData/
+
+PLOTS/
 
