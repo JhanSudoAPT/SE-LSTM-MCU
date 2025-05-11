@@ -11,10 +11,8 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 # ===================== PORTABLE PATH CONFIGURATION =====================
-# Get the directory where the script is located
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Define all paths relative to the script location
 data_dir = os.path.join(BASE_DIR, "data")
 model_dir = os.path.join(BASE_DIR, "models")
 plots_val_dir = os.path.join(model_dir, "ValPlots")
@@ -27,7 +25,7 @@ os.makedirs(plots_val_dir, exist_ok=True)
 os.makedirs(plots_test_dir, exist_ok=True)
 
 # ===================== DATA LOADING =====================
-# Load data (ALREADY NORMALIZED DATA)
+# Load data 
 train_df = pd.read_csv(os.path.join(data_dir, "train.csv"))
 val_df = pd.read_csv(os.path.join(data_dir, "val.csv"))
 test_df = pd.read_csv(os.path.join(data_dir, "test.csv"))
@@ -58,7 +56,7 @@ X_test, y_test = create_sequences(test_data, seq_length, targets)
 model = Sequential([
     LSTM(128, return_sequences=True, input_shape=(seq_length, len(features))),
     Dropout(0.1),
-    LSTM(32, return_sequences=True),  # Modified to maintain 3D output
+    LSTM(32, return_sequences=True),  
     LSTM(16),
     Dense(8, activation='tanh'),
     Dense(6)
