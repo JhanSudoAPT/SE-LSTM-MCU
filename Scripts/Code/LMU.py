@@ -196,7 +196,7 @@ def generate_metrics_report(y_true, y_pred, targets, filename):
         report += (f"\n{name}:\n  MSE={m['mse']:.4f}, MAE={m['mae']:.4f}, RMSE={m['rmse']:.4f}, "
                    f"MAPE={m['mape']:.2f}%, RSE={m['rse']:.4f}, R²={m['r2']:.4f}\n")
 
-    # Save to file
+   
     with open(filename, "w") as f:
         f.write(report)
 
