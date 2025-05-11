@@ -126,11 +126,11 @@ void print_inference_result(ei_impulse_result_t result) {
 
         float real = 0.0f;
         if (i % 2 == 0) {
-            // now → temperature (indices 0,2,4)
+            //  temperature (indices 0,2,4)
             real = norm * (max_temp - min_temp) + min_temp;
             ei_printf(" | Temp: %.2f°C\n", real);
         } else {
-            // now → humidity (indices 1,3,5)
+            //  humidity (indices 1,3,5)
             real = norm * (max_hum - min_hum) + min_hum;
             ei_printf(" | Hum: %.2f%%\n", real);
         }
