@@ -60,7 +60,7 @@ def load_data(file_path):
     # Concatenate data + embeddings (6 features)
     data = np.hstack([norm_data, embeddings])
 
-    return data, MinMaxScaler()  # Dummy scalers (data already normalized)
+    return data, MinMaxScaler()  
 
 
 def generate_sequences(data):
