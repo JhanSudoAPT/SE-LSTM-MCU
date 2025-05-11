@@ -16,7 +16,6 @@ from mpl_toolkits.mplot3d import Axes3D
 # Base directory 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Relative paths 
 data_dir = os.path.join(BASE_DIR, "data")
 model_dir = os.path.join(BASE_DIR, "models")
 val_plots_path = os.path.join(model_dir, "ValPlots")
