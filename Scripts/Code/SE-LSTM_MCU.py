@@ -253,7 +253,7 @@ def main():
 
     print(f"TFLite model saved to: {tflite_path}")
 
-    # Verify TFLite model (optional)
+    # Verify TFLite model 
     interpreter = tf.lite.Interpreter(model_path=tflite_path)
     interpreter.allocate_tensors()
     print("TFLite model verified and ready for deployment")
