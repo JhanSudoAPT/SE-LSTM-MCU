@@ -89,7 +89,6 @@ def generate_metrics_report(y_true, y_pred, horizons, save_path):
             )
         report.append("")
 
-    # Aggregated metrics
     for feat in ["T2M", "RH2M"]:
         agg_metrics = np.mean(metrics_all[feat], axis=0)
         report.append(
@@ -172,4 +171,4 @@ generate_metrics_report(y_test, test_preds, PREDICTIONS,
                        f"{PLOTS_TEST_DIR}/metrics_report_test.txt")
 plot_predictions(y_test, test_preds, PREDICTIONS, "Test", PLOTS_TEST_DIR)
 
-print("\nTraining and evaluation completed successfully!")
+print("\nTraining and evaluation completed")
