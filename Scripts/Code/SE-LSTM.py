@@ -12,11 +12,11 @@ from tensorflow.keras.layers import Bidirectional, Add
 from sklearn.decomposition import PCA
 from mpl_toolkits.mplot3d import Axes3D
 
-# ===================== PORTABLE CONFIGURATION =====================
-# Base directory (where this script is located)
+# ===================== CONFIGURATION PATHS =====================
+# Base directory 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Relative paths (created automatically)
+# Relative paths 
 data_dir = os.path.join(BASE_DIR, "data")
 model_dir = os.path.join(BASE_DIR, "models")
 val_plots_path = os.path.join(model_dir, "ValPlots")
