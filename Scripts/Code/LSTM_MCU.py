@@ -212,7 +212,7 @@ def main():
 
     # Save model
     model.save(model_path)
-    print("Training completed. Model and reports saved.")
+    print("Training completed.")
 
 if __name__ == "__main__":
     main()
