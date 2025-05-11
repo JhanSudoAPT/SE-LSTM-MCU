@@ -32,10 +32,8 @@ HP = {
 # ==================================================
 # Portable Path Configuration
 # ==================================================
-# Get the directory where the script is located
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Define all paths relative to the script location
 data_dir = os.path.join(BASE_DIR, "data")
 models_dir = os.path.join(BASE_DIR, "models")
 plots_val_dir = os.path.join(models_dir, "ValPlots")
