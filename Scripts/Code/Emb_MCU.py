@@ -13,7 +13,6 @@ import os
 # Base directory (where this script is located)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Relative paths (created automatically)
 data_dir = os.path.join(BASE_DIR, "data")
 model_dir = os.path.join(BASE_DIR, "models")
 val_plots_path = os.path.join(model_dir, "ValPlots")
@@ -29,7 +28,7 @@ os.makedirs(test_plots_path, exist_ok=True)
 # ===================== HYPERPARAMETERS =====================
 window_size = 24
 pred_steps = [1, 3, 6]
-embedding_dim = 4  # 4 seasons
+embedding_dim = 4 
 
 
 # ===================== FUNCTIONS =====================
@@ -225,10 +224,9 @@ def build_model():
     # Concatenate
     concatenated = Concatenate()([input_cont, emb])  # (24, 6)
 
-    # Modified layers (only added Dense of 8)
-    x = LSTM(64, activation='relu')(concatenated)  # 64 neurons
-    x = Dense(32, activation='relu')(x)  # Added layer
-    x = Dense(8, activation='relu')(x)  # Added layer
+    x = LSTM(64, activation='relu')(concatenated)  
+    x = Dense(32, activation='relu')(x)  
+    x = Dense(8, activation='relu')(x)  
     output = Dense(len(pred_steps) * 2, activation='linear')(x)
 
     return Model(inputs=[input_cont, input_season], outputs=output)
@@ -236,7 +234,7 @@ def build_model():
 
 # ===================== TRAINING =====================
 def main():
-    # Load data (already normalized)
+    # Load data 
     train_data, train_seasons = load_data(os.path.join(data_dir, "train.csv"))
     val_data, val_seasons = load_data(os.path.join(data_dir, "val.csv"))
     test_data, test_seasons = load_data(os.path.join(data_dir, "test.csv"))
@@ -252,8 +250,8 @@ def main():
     model.summary()
 
     # Extract and show initial embedding vectors (random initialization)
-    embedding_layer = model.layers[2]  # Embedding layer is the third in your model (index 2)
-    embedding_weights = embedding_layer.get_weights()[0]  # Weights are a matrix of (4, embedding_dim)
+    embedding_layer = model.layers[2]  
+    embedding_weights = embedding_layer.get_weights()[0]  
     print("\nInitial embedding vectors (random):")
     print(embedding_weights)  # Matrix of 4 rows (seasons) x embedding_dim columns
 
@@ -298,7 +296,6 @@ def main():
     plt.savefig(os.path.join(val_plots_path, "loss_metrics.png"), dpi=300)
     plt.close()
 
-    # ===== 2. Rest of the code =====
     # Extract and visualize embeddings
     embedding_layer = model.layers[2]
     embedding_weights = embedding_layer.get_weights()[0]
@@ -313,7 +310,7 @@ def main():
 
     # Save model
     model.save(model_path)
-    print("Training completed. Model and reports saved.")
+    print("Training completed.")
 
 
 if __name__ == "__main__":
