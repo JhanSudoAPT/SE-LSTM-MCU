@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, LSTM, Dense
+from tensorflow.keras.layers import Input, LSTM, Dense, Reshape
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 import matplotlib.pyplot as plt
 import os
 
 # ===================== CONFIGURATION =====================
-# Portable paths configuration
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(BASE_DIR, "data")
 model_dir = os.path.join(BASE_DIR, "models")
@@ -16,125 +17,101 @@ val_plots_dir = os.path.join(model_dir, "ValPlots")
 test_plots_dir = os.path.join(model_dir, "TestPlots")
 model_path = os.path.join(model_dir, "best_model.keras")
 
-# Create directories if they don't exist
 os.makedirs(data_dir, exist_ok=True)
 os.makedirs(model_dir, exist_ok=True)
 os.makedirs(val_plots_dir, exist_ok=True)
 os.makedirs(test_plots_dir, exist_ok=True)
 
-# Hyperparameters
 window_size = 24
 pred_steps = [1, 3, 6]
 
 # ===================== FUNCTIONS =====================
-def load_data(file_path):
-    """Loads UNNORMALIZED data."""
-    df = pd.read_csv(file_path)
-    return df[['T2M', 'RH2M']].values
-
-def generate_sequences(data):
-    """Generates sequences for the model."""
-    X_cont, y = [], []
-    for i in range(window_size, len(data) - max(pred_steps)):
-        X_cont.append(data[i - window_size:i])
-        y.append(np.hstack([data[i + step] for step in pred_steps]).flatten())
-    return np.array(X_cont), np.array(y)
-
 def calculate_mape(y_true, y_pred):
-    """Calculates MAPE avoiding division by zero."""
-    epsilon = 1e-10  # Small value to avoid division by zero
-    y_true_safe = np.where(np.abs(y_true) < epsilon, epsilon, y_true)
-    return np.mean(np.abs((y_true - y_pred) / y_true_safe)) * 100
+    return np.mean(np.abs((y_true - y_pred) / np.clip(np.abs(y_true), 1e-10, None)) * 100)
 
 def calculate_rse(y_true, y_pred):
-    """Calculates Relative Squared Error (RSE)."""
-    squared_error = np.sum((y_true - y_pred)**2)
-    mean_true = np.mean(y_true)
-    squared_deviation = np.sum((y_true - mean_true)**2)
-    epsilon = 1e-10  # To avoid division by zero
-    return squared_error / (squared_deviation + epsilon)
+    return np.sum((y_true - y_pred) ** 2) / np.sum((y_true - np.mean(y_true)) ** 2)
+
+def load_data(file_path):
+    df = pd.read_csv(file_path)
+    norm_data = df[['T2M', 'RH2M']].values  # Solo mantenemos las 2 características
+    return norm_data, MinMaxScaler()
+
+def generate_sequences(data):
+    X, y = [], []
+    for i in range(window_size, len(data) - max(pred_steps)):
+        X.append(data[i - window_size:i].flatten())  # Ahora 2 características x ventana
+        y.append(np.concatenate([data[i + step][:2] for step in pred_steps]))
+    return np.array(X), np.array(y)
 
 def generate_report(y_true, y_pred, plots_path, report_type='val'):
-    """Generates metrics report and plots."""
-    metrics = {}
-
-    # Lists to store all metrics
-    all_t2m_mse, all_t2m_mae, all_t2m_rmse, all_t2m_mape, all_t2m_r2, all_t2m_rse = [], [], [], [], [], []
-    all_rh2m_mse, all_rh2m_mae, all_rh2m_rmse, all_rh2m_mape, all_rh2m_r2, all_rh2m_rse = [], [], [], [], [], []
+    t2m_metrics = {f't+{t}h': {} for t in pred_steps}
+    rh2m_metrics = {f't+{t}h': {} for t in pred_steps}
 
     for i, t in enumerate(pred_steps):
-        # Metrics for T2M
         t2m_true = y_true[:, i]
         t2m_pred = y_pred[:, i]
-
-        # Metrics for RH2M
-        rh2m_true = y_true[:, i + 3]
-        rh2m_pred = y_pred[:, i + 3]
-
-        # Calculate metrics for T2M
-        t2m_metrics = {
+        t2m_metrics[f't+{t}h'] = {
             'mse': mean_squared_error(t2m_true, t2m_pred),
             'mae': mean_absolute_error(t2m_true, t2m_pred),
             'rmse': np.sqrt(mean_squared_error(t2m_true, t2m_pred)),
             'mape': calculate_mape(t2m_true, t2m_pred),
-            'r2': r2_score(t2m_true, t2m_pred),
-            'rse': calculate_rse(t2m_true, t2m_pred)
+            'rse': calculate_rse(t2m_true, t2m_pred),
+            'r2': r2_score(t2m_true, t2m_pred)
         }
 
-        # Calculate metrics for RH2M
-        rh2m_metrics = {
+        rh2m_true = y_true[:, i + 3]
+        rh2m_pred = y_pred[:, i + 3]
+        rh2m_metrics[f't+{t}h'] = {
             'mse': mean_squared_error(rh2m_true, rh2m_pred),
             'mae': mean_absolute_error(rh2m_true, rh2m_pred),
             'rmse': np.sqrt(mean_squared_error(rh2m_true, rh2m_pred)),
             'mape': calculate_mape(rh2m_true, rh2m_pred),
-            'r2': r2_score(rh2m_true, rh2m_pred),
-            'rse': calculate_rse(rh2m_true, rh2m_pred)
+            'rse': calculate_rse(rh2m_true, rh2m_pred),
+            'r2': r2_score(rh2m_true, rh2m_pred)
         }
 
-        metrics[f't+{t}h'] = {
-            'T2M': t2m_metrics,
-            'RH2M': rh2m_metrics
-        }
+    def calculate_averages(metric_dict):
+        averages = {}
+        for metric in ['mse', 'mae', 'rmse', 'mape', 'rse', 'r2']:
+            values = [metric_dict[f't+{t}h'][metric] for t in pred_steps]
+            averages[metric] = np.mean(values)
+        return averages
 
-        # Accumulate metrics
-        all_t2m_mse.append(t2m_metrics['mse'])
-        all_t2m_mae.append(t2m_metrics['mae'])
-        all_t2m_rmse.append(t2m_metrics['rmse'])
-        all_t2m_mape.append(t2m_metrics['mape'])
-        all_t2m_r2.append(t2m_metrics['r2'])
-        all_t2m_rse.append(t2m_metrics['rse'])
+    avg_t2m = calculate_averages(t2m_metrics)
+    avg_rh2m = calculate_averages(rh2m_metrics)
+    avg_general = {metric: np.mean([avg_t2m[metric], avg_rh2m[metric]]) for metric in avg_t2m}
 
-        all_rh2m_mse.append(rh2m_metrics['mse'])
-        all_rh2m_mae.append(rh2m_metrics['mae'])
-        all_rh2m_rmse.append(rh2m_metrics['rmse'])
-        all_rh2m_mape.append(rh2m_metrics['mape'])
-        all_rh2m_r2.append(rh2m_metrics['r2'])
-        all_rh2m_rse.append(rh2m_metrics['rse'])
-
-    # Text report
-    with open(os.path.join(plots_path, f"{report_type}_report.txt"), "w") as f:
-        f.write("METRICS REPORT\n")
+    with open(os.path.join(plots_path, f"report_{report_type}.txt"), "w") as f:
         f.write("=" * 50 + "\n")
+        f.write(f"METRICS REPORT ({report_type.upper()})\n")
+        f.write("=" * 50 + "\n\n")
+        f.write("[METRICS BY HORIZON]\n")
+        for t in pred_steps:
+            f.write(f"\n* t+{t}h:\n")
+            f.write(
+                f"  T2M  - MSE: {t2m_metrics[f't+{t}h']['mse']:.4f}, MAE: {t2m_metrics[f't+{t}h']['mae']:.4f}, RMSE: {t2m_metrics[f't+{t}h']['rmse']:.4f}, MAPE: {t2m_metrics[f't+{t}h']['mape']:.2f}%, RSE: {t2m_metrics[f't+{t}h']['rse']:.4f}, R²: {t2m_metrics[f't+{t}h']['r2']:.4f}\n")
+            f.write(
+                f"  RH2M - MSE: {rh2m_metrics[f't+{t}h']['mse']:.4f}, MAE: {rh2m_metrics[f't+{t}h']['mae']:.4f}, RMSE: {rh2m_metrics[f't+{t}h']['rmse']:.4f}, MAPE: {rh2m_metrics[f't+{t}h']['mape']:.2f}%, RSE: {rh2m_metrics[f't+{t}h']['rse']:.4f}, R²: {rh2m_metrics[f't+{t}h']['r2']:.4f}\n")
+        f.write("\n[AVERAGES]\n")
+        f.write(
+            f"\n* T2M:\n  MSE: {avg_t2m['mse']:.4f}, MAE: {avg_t2m['mae']:.4f}, RMSE: {avg_t2m['rmse']:.4f}, MAPE: {avg_t2m['mape']:.2f}%, RSE: {avg_t2m['rse']:.4f}, R²: {avg_t2m['r2']:.4f}\n")
+        f.write(
+            f"\n* RH2M:\n  MSE: {avg_rh2m['mse']:.4f}, MAE: {avg_rh2m['mae']:.4f}, RMSE: {avg_rh2m['rmse']:.4f}, MAPE: {avg_rh2m['mape']:.2f}%, RSE: {avg_rh2m['rse']:.4f}, R²: {avg_rh2m['r2']:.4f}\n")
+        f.write(
+            f"\n* GENERAL:\n  MSE: {avg_general['mse']:.4f}, MAE: {avg_general['mae']:.4f}, RMSE: {avg_general['rmse']:.4f}, MAPE: {avg_general['mape']:.2f}%, RSE: {avg_general['rse']:.4f}, R²: {avg_general['r2']:.4f}\n")
 
-        for horizon, values in metrics.items():
-            f.write(f"{horizon}:\n")
-            f.write(f"  T2M - MSE: {values['T2M']['mse']:.4f}, MAE: {values['T2M']['mae']:.4f}, RMSE: {values['T2M']['rmse']:.4f}, "
-                    f"MAPE: {values['T2M']['mape']:.2f}%, R²: {values['T2M']['r2']:.4f}, RSE: {values['T2M']['rse']:.4f}\n")
-            f.write(f"  RH2M - MSE: {values['RH2M']['mse']:.4f}, MAE: {values['RH2M']['mae']:.4f}, RMSE: {values['RH2M']['rmse']:.4f}, "
-                    f"MAPE: {values['RH2M']['mape']:.2f}%, R²: {values['RH2M']['r2']:.4f}, RSE: {values['RH2M']['rse']:.4f}\n\n")
-
-    # Plots
     plt.figure(figsize=(18, 12))
     for i, t in enumerate(pred_steps):
         plt.subplot(2, 3, i + 1)
         plt.plot(y_true[:100, i], label='Actual', color='navy')
-        plt.plot(y_pred[:100, i], '--', label=f'Pred (R²={metrics[f"t+{t}h"]["T2M"]["r2"]:.3f})', color='firebrick')
+        plt.plot(y_pred[:100, i], '--', label=f'Pred (R²={t2m_metrics[f"t+{t}h"]["r2"]:.3f})', color='firebrick')
         plt.title(f'T2M - t+{t}h')
         plt.legend()
 
         plt.subplot(2, 3, i + 4)
         plt.plot(y_true[:100, i + 3], label='Actual', color='darkgreen')
-        plt.plot(y_pred[:100, i + 3], '--', label=f'Pred (R²={metrics[f"t+{t}h"]["RH2M"]["r2"]:.3f})', color='orange')
+        plt.plot(y_pred[:100, i + 3], '--', label=f'Pred (R²={rh2m_metrics[f"t+{t}h"]["r2"]:.3f})', color='orange')
         plt.title(f'RH2M - t+{t}h')
         plt.legend()
 
@@ -142,53 +119,51 @@ def generate_report(y_true, y_pred, plots_path, report_type='val'):
     plt.savefig(os.path.join(plots_path, f"comparison_{report_type}.png"), dpi=300)
     plt.close()
 
+
 # ===================== MODEL =====================
 def build_model():
-    """Builds the LSTM model."""
-    input_cont = Input(shape=(window_size, 2))
-    x = LSTM(64, activation='relu')(input_cont)
-    x = Dense(32, activation='relu')(x)
-    x = Dense(8, activation='relu')(x)
-    output = Dense(len(pred_steps) * 2, activation='linear')(x)
-    return Model(inputs=input_cont, outputs=output)
+    input_layer = Input(shape=(window_size * 2,))
+    x = Reshape((window_size, 2))(input_layer)  
+    x = LSTM(36, activation='relu', unroll=True)(x)
+    x = Dense(128, activation='relu')(x)
+    x = Dense(16, activation='relu')(x)
+    output = Dense(6, activation='linear')(x)  
+    return Model(inputs=input_layer, outputs=output)
+
 
 # ===================== TRAINING =====================
 def main():
-    # Load data
-    train_data = load_data(os.path.join(data_dir, "train.csv"))
-    val_data = load_data(os.path.join(data_dir, "val.csv"))
-    test_data = load_data(os.path.join(data_dir, "test.csv"))
+    train_data, _ = load_data(os.path.join(data_dir, "train.csv"))
+    val_data, _ = load_data(os.path.join(data_dir, "val.csv"))
+    test_data, _ = load_data(os.path.join(data_dir, "test.csv"))
 
-    # Generate sequences
-    X_cont_train, y_train = generate_sequences(train_data)
-    X_cont_val, y_val = generate_sequences(val_data)
-    X_cont_test, y_test = generate_sequences(test_data)
+    X_train, y_train = generate_sequences(train_data)
+    X_val, y_val = generate_sequences(val_data)
+    X_test, y_test = generate_sequences(test_data)
 
-    # Build and train model
     model = build_model()
     model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     model.summary()
 
-    # Patience
-    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=1)
+    callbacks = [
+        EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=1),
+        ReduceLROnPlateau(monitor='val_loss', factor=0.8, patience=5, min_lr=1e-6, verbose=1)
+    ]
 
     history = model.fit(
-        X_cont_train,
-        y_train,
-        validation_data=(X_cont_val, y_val),
-        epochs=5, ##This model convergues around 40-80 epochs.
+        X_train, y_train,
+        validation_data=(X_val, y_val),
+        epochs=80,
         batch_size=32,
-        callbacks=[early_stopping]
+        callbacks=callbacks
     )
 
-    # Loss plots
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
     plt.plot(history.history['loss'], label='Train MSE', color='blue')
     plt.plot(history.history['val_loss'], label='Validation MSE', color='red')
     plt.title('MSE Evolution')
     plt.xlabel('Epochs')
-    plt.ylabel('MSE')
     plt.legend()
 
     plt.subplot(1, 2, 2)
@@ -196,23 +171,44 @@ def main():
     plt.plot(history.history['val_mae'], label='Validation MAE', color='orange')
     plt.title('MAE Evolution')
     plt.xlabel('Epochs')
-    plt.ylabel('MAE')
     plt.legend()
 
     plt.tight_layout()
     plt.savefig(os.path.join(val_plots_dir, "loss_metrics.png"), dpi=300)
     plt.close()
 
-    # Generate reports
-    y_pred_val = model.predict(X_cont_val)
-    generate_report(y_val, y_pred_val, val_plots_dir, 'val')
+    generate_report(y_val, model.predict(X_val), val_plots_dir, 'val')
+    generate_report(y_test, model.predict(X_test), test_plots_dir, 'test')
 
-    y_pred_test = model.predict(X_cont_test)
-    generate_report(y_test, y_pred_test, test_plots_dir, 'test')
-
-    # Save model
     model.save(model_path)
-    print("Training completed.")
+    print("Training completed. Model and reports saved.")
+
+    # TFLite Conversion 
+    print("\nConverting to TFLite format...")
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+    # Edge Impulse
+    converter.target_spec.supported_ops = [
+        tf.lite.OpsSet.TFLITE_BUILTINS,
+        tf.lite.OpsSet.SELECT_TF_OPS
+    ]
+    converter.target_spec.supported_types = [tf.float32]
+    converter._experimental_lower_tensor_list_ops = False
+
+    tflite_model = converter.convert()
+
+    tflite_path = os.path.join(model_dir, "model.tflite")
+    with open(tflite_path, 'wb') as f:
+        f.write(tflite_model)
+
+    print(f"TFLite model saved to: {tflite_path}")
+
+    # Verify with a classical interpreter
+    interpreter = tf.lite.Interpreter(model_path=tflite_path)
+    interpreter.allocate_tensors()
+    print("TFLite model verified and ready for deployment")
+
 
 if __name__ == "__main__":
     main()
