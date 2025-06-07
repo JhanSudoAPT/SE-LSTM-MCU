@@ -1,4 +1,4 @@
-This project uses recurrent neural networks (RNN), specifically LSTM, SE-LSTM, LMU, and TPA-LSTM, 
+This project uses recurrent neural networks (RNN), specifically LSTM, SE-LSTM, LMU, TCN, CNN-LSTM, and TPA-LSTM, 
 for prediction tasks. The project includes data preprocessing, model training, and the comparison 
 of their results in terms of performance metrics and visualization. The development environment for
 the code was PyCharm and Arduino IDE. The directory structure is as follows:
