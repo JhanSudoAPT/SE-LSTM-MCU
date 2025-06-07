@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import os
 
-#In this code, you can see how each station evolves.
+#In this code, you can see how each station evolves. 
 # As mentioned in the article, they are grouped in sets of three,
 # so you can change the assignment given in this code
 # (which is configured for the Southern Hemisphere)."
